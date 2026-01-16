@@ -1,0 +1,27 @@
+{
+    "editor.rulers": [
+        119
+    ],
+    "typescript.tsc.autoDetect": "off",
+    "npm.autoDetect": "off",
+    // Base Python configuration
+    "python.defaultInterpreterPath": "/isaac-sim/kit/python/bin/python3",
+    "python.languageServer": "Pylance",
+    // Black formatting on save
+    "[python]": {
+        "editor.defaultFormatter": "ms-python.black-formatter",
+        "editor.formatOnSave": false
+    },
+    "black-formatter.args": [
+        "--line-length",
+        "119"
+    ],
+    // Flake8 linting
+    "flake8.args": [
+        "--max-line-length=119"
+    ],
+
+    // Git configuration
+    "git.autofetch": true,
+    "git.confirmSync": false
+}

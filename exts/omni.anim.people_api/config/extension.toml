@@ -1,0 +1,81 @@
+[package]
+version = "0.7.9"
+authors = ["NVIDIA"]
+title = "Animated People Controller"
+description= "Animated People Controller"
+readme  = "docs/README.md"
+category = "Animation"
+keywords = ["people","metropolis","simulation", "animation", "metrosim", "api"]
+changelog="docs/CHANGELOG.md"
+preview_image = "data/preview.png"
+icon = "data/icon.png"
+writeTarget.kit = true
+
+[dependencies]
+"omni.usd" = {}
+"omni.ui" = {}
+"omni.kit.menu.utils" = {}
+"omni.anim.navigation.core" = { version = "~107.3.0" }
+
+"omni.anim.graph.core" = {}
+"omni.anim.retarget.core" = {}
+"omni.kit.scripting" = {}
+"isaacsim.storage.native" = {}
+"omni.metropolis.utils" = { version = "^0.1.19"}
+
+[[python.module]]
+name = "omni.anim.people_api"
+
+[[python.module]]
+name = "omni.anim.people_api.tests"
+
+[settings]
+exts."omni.anim.people_api".command_settings.command_file_path = ""
+exts."omni.anim.people_api".command_settings.robot_command_file_path = ""
+exts."omni.anim.people_api".command_settings.number_of_loop = 0           # '0' means no loop; '1' means 1 loop (characters return to initial spot to form 1 loop); 'inf' for endless looping
+exts."omni.anim.people_api".navigation_settings.dynamic_avoidance_enabled= true
+exts."omni.anim.people_api".navigation_settings.navmesh_enabled = true
+exts."omni.anim.people_api".cache_action_metadata = false
+exts."omni.anim.people_api".final_target_distance = 0.25
+persistent.exts."omni.anim.people_api".asset_settings.character_assets_path = ""
+persistent.exts."omni.anim.people_api".behavior_script_settings.behavior_script_path = ""
+persistent.exts."omni.anim.people_api".character_prim_path = "/World/Characters"
+persistent.exts."omni.anim.people_api".custom_command_tracking_file_path = ""
+
+[[test]]
+name = "default"
+dependencies = []
+args = [
+    "--no-window",
+    "--/windowless=1",
+    "--/app/settings/fabricDefaultStageFrameHistoryCount=3",
+    "--/app/file/ignoreUnsavedStage=1",
+]
+stdoutFailPatterns.exclude = [
+    "*GLInteropContext::init: carb::windowing is not available*"
+]
+
+[[test]]
+name = "python-tests"
+dependencies = []
+pythonTests.include = [
+    "omni.anim.people_api.tests.*",
+]
+args = [
+    "--no-window",
+    "--/windowless=1",
+    "--/app/settings/fabricDefaultStageFrameHistoryCount=3",
+    "--/app/file/ignoreUnsavedStage=1",
+]
+stdoutFailPatterns.exclude = [
+    "*GLInteropContext::init: carb::windowing is not available*"
+]
+
+[[test]]
+name = "startup"
+args = [
+    "--/app/settings/fabricDefaultStageFrameHistoryCount=3",
+]
+stdoutFailPatterns.exclude = [
+    "*GLInteropContext::init: carb::windowing is not available*"
+]
