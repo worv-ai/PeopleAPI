@@ -1,0 +1,9 @@
+
+[package]
+    archivePath = "./../3/archives/omni.anim.people_api-0.2.0.zip"
+
+    [package.publish]
+        kitVersion = "106.0.1+release.123016.6906dfd7.gl"
+        date = 1724812681
+        buildNumber = "0.0.1+main.0.c48f47f1.local"
+        repoName = "omni.replicator.agent"
