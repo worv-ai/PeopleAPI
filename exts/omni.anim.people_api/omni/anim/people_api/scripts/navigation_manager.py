@@ -157,12 +157,13 @@ class NavigationManager:
             if self.navmesh_enabled:
                 generated_path = self.navmesh.query_shortest_path(prev_point, point, agent_radius=0.5)
                 if generated_path is None:
-                    carb.log_error(
+                    carb.log_warn(
                         "There is no valid path between point position : "
                         + str(prev_point)
                         + " and "
                         + "position : "
                         + str(point)
+                        + " (NavMesh may have disconnected regions)"
                     )
                     return
                 points = generated_path.get_points()
