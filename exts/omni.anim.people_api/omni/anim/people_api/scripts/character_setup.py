@@ -365,10 +365,17 @@ class CharacterSetup:
 
     def _get_random_position_list(self, num_characters: int):
         position_list = []
-        for _ in range(num_characters):
+
+        # Get area mask to include all navmesh areas
+        area_count = self.inav.get_area_count()
+        area_mask = [1] * max(area_count, 1)  # Include all areas
+
+        for i in range(num_characters):
             while True:
-                random_position = carb.Float3(0, 0, 0)
-                if not self.navmesh.query_random_point("test", random_position):
+                # query_random_point returns the point directly, not via out parameter
+                # Use unique ID for each query to get different random points
+                random_position = self.navmesh.query_random_point(f"spawn_{i}", area_mask)
+                if random_position is None:
                     continue
                 path = self.navmesh.query_shortest_path(random_position, self.starting_point)
                 if path is not None:

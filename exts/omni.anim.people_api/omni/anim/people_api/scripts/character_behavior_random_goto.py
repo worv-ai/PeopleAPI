@@ -16,9 +16,17 @@ class CharacterBehaviorRandomGoto(behavior_base.CharacterBehaviorBase):
     def get_simulation_commands(self):
         current_position = self.get_current_position()
         commands = []
+
+        # Get area mask to include all navmesh areas
+        import omni.anim.navigation.core as nav
+        inav = nav.acquire_interface()
+        area_count = inav.get_area_count()
+        area_mask = [1] * max(area_count, 1)  # Include all areas
+
         while True:
-            random_point = carb.Float3(0, 0, 0)
-            if not self.navmesh.query_random_point(self.character_name, random_point):
+            # query_random_point returns the point directly, not via out parameter
+            random_point = self.navmesh.query_random_point(self.character_name, area_mask)
+            if random_point is None:
                 continue
             path = self.navmesh.query_shortest_path(current_position, random_point)
             if path is not None:
