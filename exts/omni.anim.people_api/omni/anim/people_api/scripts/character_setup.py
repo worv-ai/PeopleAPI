@@ -512,7 +512,9 @@ class CharacterSetup:
                     if not ext_path:
                         ext_path = character_behavior.value.script_path
                     attr.Set([r"{}".format(ext_path)])
-                    trigger_state_api_list = Utils.add_colliders(prim)
+                    # Use simplified capsule collider instead of convexDecomposition
+                    # to prevent PhysX crashes with animated characters
+                    trigger_state_api_list = Utils.add_colliders(prim, use_simple_collider=True)
                     self.trigger_state_api_dict[is_target] = str(prim.GetPrimPath()), trigger_state_api_list
                     Utils.add_rigid_body_dynamics(prim)
 
