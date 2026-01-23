@@ -315,9 +315,18 @@ class Utils:
     # From the functionality of isaacsim.replicator.behavior.utils,
     # modified to work with omni.anim.people_api.scripts.utils.py
 
-    # Enables collisions with the asset (without rigid body dynamics the asset will be static)
-    def add_colliders(root_prim):
+    # Enables collisions with the asset using a simple capsule collider
+    # This replaces the complex convexDecomposition approach which causes PhysX crashes
+    # when robot collides with animated characters during simulation_context.step()
+    def add_colliders(root_prim, use_simple_collider=True):
         trigger_state_api_list = []
+
+        if use_simple_collider:
+            # Use a single capsule collider for the entire character
+            # This is much more stable for physics simulation with animated meshes
+            return Utils._add_simple_capsule_collider(root_prim)
+
+        # Original complex collider code (kept for reference, but causes crashes)
         # Iterate descendant prims (including root) and add colliders to mesh or primitive types
         for desc_prim in Usd.PrimRange(root_prim):
             if desc_prim.IsA(UsdGeom.Mesh) or desc_prim.IsA(UsdGeom.Gprim):
@@ -355,6 +364,59 @@ class Utils:
                     trigger_state_api = PhysxSchema.PhysxTriggerStateAPI(desc_prim)
                 trigger_state_api_list.append(trigger_state_api)
         return trigger_state_api_list
+
+    def _add_simple_capsule_collider(root_prim, capsule_height=1.7, capsule_radius=0.3):
+        """Add a simple capsule collider to represent a human character.
+
+        This creates a single capsule primitive as a child of the root_prim,
+        positioned at the character's center. Much more stable than convexDecomposition
+        on animated meshes.
+
+        Args:
+            root_prim: The SkelRoot prim of the character
+            capsule_height: Height of the capsule in meters (default 1.7m for adult human)
+            capsule_radius: Radius of the capsule in meters (default 0.3m)
+
+        Returns:
+            List of trigger state APIs (empty for simple collider)
+        """
+        stage = root_prim.GetStage()
+        root_path = root_prim.GetPrimPath()
+
+        # Create a capsule collider as a child of the character root
+        collider_path = root_path.AppendChild("CollisionCapsule")
+
+        # Check if collider already exists
+        if stage.GetPrimAtPath(collider_path):
+            return []
+
+        # Create the capsule geometry
+        capsule_prim = UsdGeom.Capsule.Define(stage, collider_path)
+
+        # Set capsule dimensions (Z-up axis for standing human in Isaac Sim)
+        capsule_prim.GetAxisAttr().Set("Z")
+        capsule_prim.GetHeightAttr().Set(capsule_height - 2 * capsule_radius)  # Height excludes caps
+        capsule_prim.GetRadiusAttr().Set(capsule_radius)
+
+        # Position capsule at character center (half height above ground)
+        xform = UsdGeom.Xformable(capsule_prim.GetPrim())
+        xform.AddTranslateOp().Set(Gf.Vec3d(0, 0, capsule_height / 2))
+
+        # Make the capsule invisible (collision only, no rendering)
+        capsule_prim.GetPrim().GetAttribute("visibility").Set("invisible")
+        # Also set purpose to guide so it doesn't render
+        capsule_prim.GetPurposeAttr().Set(UsdGeom.Tokens.guide)
+
+        # Apply collision API
+        collision_api = UsdPhysics.CollisionAPI.Apply(capsule_prim.GetPrim())
+        collision_api.CreateCollisionEnabledAttr(True)
+
+        # Apply PhysX collision API
+        physx_collision_api = PhysxSchema.PhysxCollisionAPI.Apply(capsule_prim.GetPrim())
+        physx_collision_api.CreateContactOffsetAttr(0.02)
+        physx_collision_api.CreateRestOffsetAttr(0.0)
+
+        return []
 
     # Enables rigid body dynamics (physics simulation) on the prim
     def add_rigid_body_dynamics(prim, disable_gravity=False, angular_damping=None):
