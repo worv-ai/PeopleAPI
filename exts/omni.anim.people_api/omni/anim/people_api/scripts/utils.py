@@ -365,6 +365,13 @@ class Utils:
                 trigger_state_api_list.append(trigger_state_api)
         return trigger_state_api_list
 
+    # Pedestrian collision physics parameters.
+    # Mass affects impulse calculation (impulse = mass * velocity_change).
+    PEDESTRIAN_COLLISION_MASS = 70.0
+    # Maximum contact impulse limits the impulse reported/applied at collision.
+    # Set to ~100 to keep impulses in the 50-100 range for robot-pedestrian collisions.
+    PEDESTRIAN_MAX_CONTACT_IMPULSE = 100.0
+
     def _add_simple_capsule_collider(root_prim, capsule_height=1.7, capsule_radius=0.3):
         """Add a simple capsule collider to represent a human character.
 
@@ -416,6 +423,11 @@ class Utils:
         physx_collision_api.CreateContactOffsetAttr(0.02)
         physx_collision_api.CreateRestOffsetAttr(0.0)
 
+        # Apply mass properties to control collision impulse magnitude.
+        # Lower mass results in lower impulse values during robot-pedestrian collisions.
+        mass_api = UsdPhysics.MassAPI.Apply(capsule_prim.GetPrim())
+        mass_api.CreateMassAttr().Set(Utils.PEDESTRIAN_COLLISION_MASS)
+
         return []
 
     # Enables rigid body dynamics (physics simulation) on the prim
@@ -433,5 +445,9 @@ class Utils:
         else:
             physx_rigid_body_api = PhysxSchema.PhysxRigidBodyAPI(prim)
         physx_rigid_body_api.GetDisableGravityAttr().Set(disable_gravity)
+        # Limit max contact impulse to reduce collision impulse magnitude
+        physx_rigid_body_api.CreateMaxContactImpulseAttr().Set(Utils.PEDESTRIAN_MAX_CONTACT_IMPULSE)
+        # Limit depenetration velocity to reduce separation forces
+        physx_rigid_body_api.CreateMaxDepenetrationVelocityAttr().Set(1.0)
         if angular_damping is not None:
             physx_rigid_body_api.CreateAngularDampingAttr().Set(angular_damping)
